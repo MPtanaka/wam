@@ -1,0 +1,48 @@
+/**
+ *
+ * @param {*} count 取得する件数
+ * @param {*} pageNum ページ番号
+ * @param {*} prefecture 都道府県番号
+ */
+async function main(count, pageNum, prefecture) {
+  const execCopy = string => {
+    var temp = document.createElement("div");
+    temp.appendChild(document.createElement("pre")).textContent = string;
+    var s = temp.style;
+    s.position = "fixed";
+    s.left = "-100%";
+    document.body.appendChild(temp);
+    document.getSelection().selectAllChildren(temp);
+    var result = document.execCommand("copy");
+    document.body.removeChild(temp);
+    // true なら実行できている falseなら失敗か対応していないか
+    return result;
+  };
+
+  const URL = `https://www.kaigokensaku.mhlw.go.jp/${prefecture}/index.php?action_kouhyou_pref_search_search=true&method=search&p_count=${count}&p_offset=${pageNum}`;
+  const result = await fetch(URL, {
+    credentials: "include",
+    headers: {
+      accept: "application/json, text/javascript, */*; q=0.01",
+      "accept-language": "ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7",
+      "x-requested-with": "XMLHttpRequest"
+    },
+    referrer: document.referrer,
+    referrerPolicy: "no-referrer-when-downgrade",
+    body: null,
+    method: "GET",
+    mode: "cors"
+  }).then(response => response.json());
+
+  const list = result.data.map(d =>
+    [
+      d.ShortName,
+      d.JigyosyoName,
+      d.JigyosyoYubinbangou.replace(",", "-"),
+      d.JigyosyoShozaichi,
+      d.JigyosyoTel,
+      d.JigyosyoFax
+    ].join()
+  );
+  return execCopy(list.join("\n"));
+}
